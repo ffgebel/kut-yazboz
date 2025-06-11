@@ -873,11 +873,11 @@
                             <input type="number" id="team2RoundScoreInput" class="score-input" value="0">
                         </div>
                         <div class="quick-score-buttons">
-                            <div> <button onclick="applyQuickScore(-100, 'team1')">Takım 1 Bitirdi (-100)</button>
-                                <button onclick="applyQuickScore(-200, 'team1')">Takım 1 Okey Attı (-200)</button>
+                            <div> <button onclick="applyQuickScore(-100, 'team1')">1. Takım Bitti (-100)</button>
+                                <button onclick="applyQuickScore(-200, 'team1')">1. Takım Okey Vurdu (-200)</button>
                             </div>
-                            <div> <button onclick="applyQuickScore(-100, 'team2')">Takım 2 Bitirdi (-100)</button>
-                                <button onclick="applyQuickScore(-200, 'team2')">Takım 2 Okey Attı (-200)</button>
+                            <div> <button onclick="applyQuickScore(-100, 'team2')">2. Takım Bitti (-100)</button>
+                                <button onclick="applyQuickScore(-200, 'team2')">2. Takım Okey Vurdu (-200)</button>
                             </div>
                         </div>
                         <button class="btn" id="submitRoundScore">El Skorunu Kaydet</button>
@@ -1143,9 +1143,9 @@
             let leaderInfo = '';
 
             if (teamScores[0] < teamScores[1]) {
-                leaderInfo = `<span class="leader">Takım 1 ${diff} puan önde</span>`;
+                leaderInfo = `<span class="leader">1. Takım ${diff} puan önde</span>`;
             } else if (teamScores[1] < teamScores[0]) {
-                leaderInfo = `<span class="leader">Takım 2 ${diff} puan önde</span>`;
+                leaderInfo = `<span class="leader">2. Takım ${diff} puan önde</span>`;
             } else {
                 leaderInfo = `<span class="leader">Berabere</span>`;
             }
