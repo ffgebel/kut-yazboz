@@ -70,19 +70,20 @@
             --transition-speed: 0.3s;
         }
 
-        body {
-            font-family: 'Poppins', sans-serif;
+        html, body {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            /* Yüksekliği 100dvh yaparak tarayıcı çubuklarının hesaba katılmasını sağlıyoruz */
+            min-height: 100dvh; 
+            font-family: 'Poppins', sans-serif;
             background: var(--primary-bg);
             color: var(--text-primary);
             overflow-x: hidden;
             transition: background var(--transition-speed) ease-in-out, color var(--transition-speed) ease-in-out;
             font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* İçeriğin yukarıdan başlamasını sağla */
         }
 
         .container {
@@ -93,6 +94,7 @@
             gap: 20px;
             padding: 20px;
             box-sizing: border-box;
+            flex-grow: 1; /* Konteynerin müsait alanı doldurmasını sağla */
         }
 
         .card {
@@ -815,7 +817,7 @@
     <div class="container" id="playerSetupScreen">
         <div class="card">
             <h1>Küt Yaz Bozu</h1>
-            <h2>Oyuncu İsimleri (İsteğe Bağlı) ve Takımlar</h2>
+            <h2>Oyuncu İsimleri ve Takımlar</h2>
             <div class="team-selection">
                 <div class="player-name-card">
                     <h3>Takım 1 Oyuncu 1</h3>
@@ -871,11 +873,11 @@
                             <input type="number" id="team2RoundScoreInput" class="score-input" value="0">
                         </div>
                         <div class="quick-score-buttons">
-                            <div> <button onclick="applyQuickScore(-100, 'team1')">Takım 1 Bitti (-100)</button>
-                                <button onclick="applyQuickScore(-200, 'team1')">Takım 1 Okey Vurdu (-200)</button>
+                            <div> <button onclick="applyQuickScore(-100, 'team1')">Takım 1 Bitirdi (-100)</button>
+                                <button onclick="applyQuickScore(-200, 'team1')">Takım 1 Okey Attı (-200)</button>
                             </div>
-                            <div> <button onclick="applyQuickScore(-100, 'team2')">Takım 2 Bitti (-100)</button>
-                                <button onclick="applyQuickScore(-200, 'team2')">Takım 2 Okey Vurdu (-200)</button>
+                            <div> <button onclick="applyQuickScore(-100, 'team2')">Takım 2 Bitirdi (-100)</button>
+                                <button onclick="applyQuickScore(-200, 'team2')">Takım 2 Okey Attı (-200)</button>
                             </div>
                         </div>
                         <button class="btn" id="submitRoundScore">El Skorunu Kaydet</button>
@@ -1141,9 +1143,9 @@
             let leaderInfo = '';
 
             if (teamScores[0] < teamScores[1]) {
-                leaderInfo = `<span class="leader">1. Takım ${diff} puan önde</span>`;
+                leaderInfo = `<span class="leader">Takım 1 ${diff} puan önde</span>`;
             } else if (teamScores[1] < teamScores[0]) {
-                leaderInfo = `<span class="leader">2. Takım ${diff} puan önde</span>`;
+                leaderInfo = `<span class="leader">Takım 2 ${diff} puan önde</span>`;
             } else {
                 leaderInfo = `<span class="leader">Berabere</span>`;
             }
