@@ -70,20 +70,19 @@
             --transition-speed: 0.3s;
         }
 
-        html, body {
+        body {
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            /* Yüksekliği 100dvh yaparak tarayıcı çubuklarının hesaba katılmasını sağlıyoruz */
-            min-height: 100dvh; 
-            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             background: var(--primary-bg);
             color: var(--text-primary);
             overflow-x: hidden;
             transition: background var(--transition-speed) ease-in-out, color var(--transition-speed) ease-in-out;
             font-size: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* İçeriğin yukarıdan başlamasını sağla */
         }
 
         .container {
@@ -94,7 +93,6 @@
             gap: 20px;
             padding: 20px;
             box-sizing: border-box;
-            flex-grow: 1; /* Konteynerin müsait alanı doldurmasını sağla */
         }
 
         .card {
@@ -873,11 +871,11 @@
                             <input type="number" id="team2RoundScoreInput" class="score-input" value="0">
                         </div>
                         <div class="quick-score-buttons">
-                            <div> <button onclick="applyQuickScore(-100, 'team1')">1. Takım Bitti (-100)</button>
-                                <button onclick="applyQuickScore(-200, 'team1')">1. Takım Okey Vurdu (-200)</button>
+                            <div> <button onclick="applyQuickScore(-100, 'team1')">Takım 1 Bitti (-100)</button>
+                                <button onclick="applyQuickScore(-200, 'team1')">Takım 1 Okey Vurdu (-200)</button>
                             </div>
-                            <div> <button onclick="applyQuickScore(-100, 'team2')">2. Takım Bitti (-100)</button>
-                                <button onclick="applyQuickScore(-200, 'team2')">2. Takım Okey Vurdu (-200)</button>
+                            <div> <button onclick="applyQuickScore(-100, 'team2')">Takım 2 Bitti (-100)</button>
+                                <button onclick="applyQuickScore(-200, 'team2')">Takım 2 Okey Vurdu (-200)</button>
                             </div>
                         </div>
                         <button class="btn" id="submitRoundScore">El Skorunu Kaydet</button>
