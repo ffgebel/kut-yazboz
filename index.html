@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Küt Yaz Bozu</title>
+    <style>
+        :root {
+            --primary-light: #667eea;
+            --primary-dark: #764ba2;
+            --bg-gradient: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+        }
+        *, html, body { margin:0; padding:0; box-sizing:border-box; width:100%; }
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--bg-gradient);
+            display: flex; justify-content: center; align-items: flex-start;
+            min-height:100vh; padding:10px; color:#333;
+        }
+        .container {
+            width:100%; max-width:800px;
+            background: rgba(255,255,255,0.9);
+            border-radius:20px;
+            box-shadow:0 20px 40px rgba(0,0,0,0.1);
+            overflow:hidden;
+        }
+        .header {
+            background: var(--bg-gradient);
+            padding:20px; text-align:center; color:#fff;
+        }
+        .header h1 { font-size:2em; }
+        .header p { font-size:1em; opacity:0.9; }
+        .game-board { padding:20px; display:flex; flex-direction:column; gap:20px; }
+        .section {
+            background:#fff; border-radius:12px;
+            padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 { font-size:1.2em; text-align:center; margin-bottom:10px; color:#495057; }
+        .player-input { display:flex; flex-wrap:wrap; gap:10px; }
+        .player-input input {
+            flex:1 1 45%; padding:8px;
+            border:2px solid #e9ecef; border-radius:6px;
+        }
+        .btn { padding:8px 12px; border:none; border-radius:6px;
+            cursor:pointer; font-size:.9em; font-weight:bold;
+            transition:all .2s; flex:1;
+        }
+        .btn-primary { background:var(--primary-light); color:#fff; }
+        .btn-primary:hover { transform:translateY(-2px); }
+        .btn-success { background:#28a745; color:#fff; }
+        .btn-warning { background:#ffc107; color:#212529; }
+        .scores-container, .teams-container { display:grid; gap:10px; }
+        .teams-container { grid-template-columns:1fr 1fr; }
+        .scores-container { grid-template-columns:1fr 1fr; }
+        .team-display, .score-display, .dealer-info { background:#f8f9fa; border-radius:8px; padding:10px; }
+        .score-item { display:flex; justify-content:space-between; margin-bottom:8px; }
+        .score-input { display:flex; gap:8px; margin-bottom:8px; }
+        .round-info { background:var(--primary-light); color:#fff; padding:8px; border-radius:6px; text-align:center; margin-bottom:8px; }
+        .missions-list { list-style:none; padding:0; }
+        .mission-item { display:flex; align-items:center; padding:8px;
+            background:#f8f9fa; border-radius:8px; margin-bottom:6px;
+            border-left:4px solid var(--primary-light); transition:all .2s;
+        }
+        .mission-item.current { background:var(--bg-gradient); color:#fff; border-left-color:#fff; }
+        .mission-number { width:24px; height:24px; border-radius:50%;
+            background:var(--primary-light); color:#fff;
+            display:flex; align-items:center; justify-content:center;
+            font-size:.9em; margin-right:8px;
+        }
+        .table-responsive { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:8px; text-align:center; }
+        .game-over { position:fixed; top:0; left:0;
+            width:100%; height:100%; background:rgba(0,0,0,0.7);
+            display:none; justify-content:center; align-items:center;
+        }
+        .game-over-content { background:#fff; padding:20px;
+            border-radius:12px; text-align:center; max-width:80%;
+        }
+        .confetti { position:absolute; width:6px; height:6px;
+            background:var(--primary-light);
+            animation:confetti-fall 3s linear infinite;
+        }
+        @keyframes confetti-fall { to { transform:translateY(100vh) rotate(360deg);} }
+        @media(max-width:600px) {
+            .header h1 { font-size:1.5em; }
+            .game-board { gap:15px; padding:15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Küt Yaz Bozu</h1>
+            <p>Eşli Oyun - 10 El</p>
+        </div>
+        <div class="game-board">
+            <div class="section" id="playerSetup">
+                <h2>👥 Oyuncular</h2>
+                <div class="player-input">
+                    <input id="player1" placeholder="1. Oyuncu">
+                    <input id="player2" placeholder="2. Oyuncu">
+                    <input id="player3" placeholder="3. Oyuncu">
+                    <input id="player4" placeholder="4. Oyuncu">
+                </div>
+                <button class="btn btn-primary" onclick="startGame()">Oyunu Başlat</button>
+            </div>
+            <div class="section teams-container" id="teamsDisplay" style="display:none;">
+                <div class="team-display">
+                    <h2>Takım 1</h2>
+                    <p id="team1Players"></p>
+                </div>
+                <div class="team-display">
+                    <h2>Takım 2</h2>
+                    <p id="team2Players"></p>
+                </div>
+            </div>
+            <div class="section scores-container" id="scoresSection" style="display:none;">
+                <div class="score-display">
+                    <div class="score-item"><span>Takım 1</span><span id="team1Score">0</span></div>
+                    <div class="score-input">
+                        <input id="team1Input" type="number" placeholder="Skor">
+                        <button class="btn btn-primary" onclick="addManualScore(1)">Ekle</button>
+                    </div>
+                    <button class="btn btn-success" onclick="addScore(1,'complete')">Bitirdi (-100)</button>
+                    <button class="btn btn-warning" onclick="addScore(1,'penalty')">Okey Attı (-200)</button>
+                </div>
+                <div class="score-display">
+                    <div class="score-item"><span>Takım 2</span><span id="team2Score">0</span></div>
+                    <div class="score-input">
+                        <input id="team2Input" type="number" placeholder="Skor">
+                        <button class="btn btn-primary" onclick="addManualScore(2)">Ekle</button>
+                    </div>
+                    <button class="btn btn-success" onclick="addScore(2,'complete')">Bitirdi (-100)</button>
+                    <button class="btn btn-warning" onclick="addScore(2,'penalty')">Okey Attı (-200)</button>
+                </div>
+            </div>
+            <div class="section dealer-info" id="dealerSection" style="display:none;">
+                <h2>🃏 Dağıtan & El</h2>
+                <div class="round-info">El: <span id="currentRound">1</span>/10</div>
+                <p>Dağıtan: <strong id="dealerName"></strong></p>
+                <button class="btn btn-primary" onclick="nextRound()">Sonraki El</button>
+            </div>
+            <div class="section" id="scoreTableSection" style="display:none;">
+                <h2>🏆 Skor Tablosu</h2>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>El</th><th>Takım 1</th><th>Takım 2</th></tr></thead>
+                        <tbody id="scoreTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="summary" class="gap-warning"></div>
+            </div>
+            <div class="section" id="missionsSection" style="display:none;">
+                <h2>🎯 Görevler</h2>
+                <ul class="missions-list" id="missionsList"></ul>
+            </div>
+        </div>
+    </div>
+    <div class="game-over" id="gameOver">
+        <div class="game-over-content">
+            <h2>🎉 Oyun Bitti!</h2>
+            <div id="winnerAnnouncement"></div>
+            <button class="btn btn-primary" onclick="resetGame()">Yeni Oyun</button>
+        </div>
+    </div>
+    <script>
+        const tasks = ['Dörtlü küt','Dörtlü seri','4lü küt + 3lü seri','4lü seri + 3lü küt','5li seri','2 tane 4lü küt','2 tane 4lü seri','4lü küt + 5li seri','5 çift','Elden bitiş'];
+        let gameState = { players:[], currentRound:1, currentDealer:0, scores:{team1:0,team2:0}, roundScores:[], gameStarted:false };
+
+        function startGame() {
+            const names = [1,2,3,4].map(i => document.getElementById('player'+i).value.trim());
+            if (names.some(n => !n)) { alert('Lütfen tüm oyuncu isimlerini girin!'); return; }
+            gameState.players = names;
+            gameState.gameStarted = true;
+            document.getElementById('team1Players').textContent = `${names[0]} & ${names[1]}`;
+            document.getElementById('team2Players').textContent = `${names[2]} & ${names[3]}`;
+            ['playerSetup','teamsDisplay','scoresSection','dealerSection','scoreTableSection','missionsSection'].forEach(id => document.getElementById(id).style.display = 'block');
+            populateMissions(); updateDealer();
+        }
+
+        function populateMissions() {
+            const ul = document.getElementById('missionsList'); ul.innerHTML = '';
+            tasks.forEach((t,i) => {
+                const li = document.createElement('li');
+                li.className = 'mission-item' + (i === 0 ? ' current' : '');
+                li.innerHTML = `<div class="mission-number">${i+1}</div><div>${t}</div>`;
+                ul.appendChild(li);
+            });
+        }
+
+        function updateDealer() {
+            if (!gameState.gameStarted) return;
+            document.getElementById('dealerName').textContent = gameState.players[gameState.currentDealer];
+            document.getElementById('currentRound').textContent = gameState.currentRound;
+        }
+
+        function addScore(team, type) {
+            gameState.scores['team'+team] += (type === 'complete' ? -100 : -200);
+            updateScoreDisplay(team);
+        }
+
+        function addManualScore(team) {
+            const input = document.getElementById('team'+team+'Input');
+            const val = parseInt(input.value);
+            if (isNaN(val)) { alert('Lütfen geçerli sayı girin'); return; }
+            gameState.scores['team'+team] += val;
+            input.value = '';
+            updateScoreDisplay(team);
+        }
+
+        function updateScoreDisplay(team) {
+            const el = document.getElementById('team'+team+'Score');
+            el.textContent = gameState.scores['team'+team];
+            el.style.transform = 'scale(1.2)';
+            setTimeout(() => el.style.transform = 'scale(1)', 200);
+        }
+
+        function saveRoundScore() {
+            const last = gameState.roundScores.slice(-1)[0] || { cumTeam1: 0, cumTeam2: 0 };
+            const change1 = gameState.scores.team1 - last.cumTeam1;
+            const change2 = gameState.scores.team2 - last.cumTeam2;
+            gameState.roundScores.push({ round: gameState.currentRound, team1Change: change1, team2Change: change2, cumTeam1: gameState.scores.team1, cumTeam2: gameState.scores.team2 });
+            updateScoreTable();
+        }
+
+        function updateScoreTable() {
+            const tbody = document.getElementById('scoreTableBody');
+            const r = gameState.roundScores.slice(-1)[0];
+            const tr = document.createElement('tr'); tr.style.borderBottom = '1px solid #e9ecef';
+            tr.innerHTML = `<td>${r.round}</td><td>${r.team1Change>0?'+':''}${r.team1Change}</td><td>${r.team2Change>0?'+':''}${r.team2Change}</td>`;
+            tbody.appendChild(tr);
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const t1 = gameState.scores.team1, t2 = gameState.scores.team2;
+            const gap = Math.abs(t1-t2);
+            let leader = 'Berabere'; if (t1 < t2) leader = 'Takım 1'; else if (t2 < t1) leader = 'Takım 2';
+            document.getElementById('summary').innerHTML = `Toplam: T1: ${t1} | T2: ${t2}<br>${leader}${leader!=='Berabere'?' önde '+gap+' puan':''}`;
+        }
+
+        function nextRound() {
+            saveRoundScore();
+            if (gameState.currentRound >= 10) { endGame(); return; }
+            gameState.currentRound++;
+            gameState.currentDealer = (gameState.currentDealer+1)%4;
+            document.querySelectorAll('.mission-item').forEach((el,i) => el.classList.toggle('current', i===gameState.currentRound-1));
+            updateDealer();
+        }
+
+        function endGame() {
+            const t1 = gameState.scores.team1, t2 = gameState.scores.team2;
+            const winner = t1<t2?'Takım 1':t2<t1?'Takım 2':'Berabere';
+            document.getElementById('winnerAnnouncement').innerHTML = `<h3>${winner} Kazandı!</h3><p>Skorlar - T1: ${t1} | T2: ${t2}</p>`;
+            for (let i=0; i<50; i++) createConfetti();
+            document.getElementById('gameOver').style.display = 'flex';
+        }
+
+        function createConfetti() {
+            const c = document.createElement('div'); c.className = 'confetti';
+            c.style.left = Math.random()*100+'%'; document.body.appendChild(c);
+            setTimeout(() => c.remove(), 3000);
+        }
+
+        function resetGame() { location.reload(); }
+    </script>
+</body>
+</html>
