@@ -29,6 +29,10 @@
 
             /* RGB değerleri, parlama efektleri için */
             --score-value-color-rgb: 167, 217, 255;
+
+            /* Undo/Redo butonları için yeni renkler */
+            --undo-redo-bg: linear-gradient(135deg, #f06a6a, #c0392b); /* Kırmızı tonları */
+            --undo-redo-hover: linear-gradient(135deg, #e74c3c, #a72d20);
         }
 
         /* Kumar Masası Yeşili Teması */
@@ -54,6 +58,10 @@
 
             /* RGB değerleri, parlama efektleri için */
             --score-value-color-rgb: 252, 235, 159;
+
+            /* Undo/Redo butonları için yeni renkler */
+            --undo-redo-bg: linear-gradient(135deg, #ff9800, #f44336); /* Turuncu-kırmızı tonları */
+            --undo-redo-hover: linear-gradient(135deg, #e68a00, #d32f2f);
         }
 
         /* Ortak Değişkenler */
@@ -394,6 +402,44 @@
             box-shadow: 0 2px 5px var(--shadow-dark);
         }
 
+        /* Undo/Redo Butonları için yeni stil */
+        .undo-redo-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .undo-redo-buttons button {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: none;
+            background: var(--undo-redo-bg);
+            color: white;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 3px 10px var(--shadow-dark);
+            flex: 1; /* Butonların eşit genişlikte olması için */
+        }
+
+        .undo-redo-buttons button:hover {
+            background: var(--undo-redo-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px var(--shadow-dark);
+        }
+
+        .undo-redo-buttons button:disabled {
+            background: rgba(128, 128, 128, 0.5);
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+            transform: none;
+        }
+
+
         .score-table-container {
             overflow-x: auto;
             margin-top: 25px;
@@ -663,21 +709,25 @@
             }
 
             .score-input-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-                padding: 10px 15px;
+                flex-direction: column; /* Mobil'de etiket ve input alt alta */
+                align-items: flex-start; /* Sola hizala */
+                gap: 5px; /* Aralarındaki boşluğu azalt */
+                padding: 10px 15px; /* İç boşluğu ayarla */
             }
 
             .score-input-item label {
                 margin-bottom: 5px;
                 font-size: 1em; /* Mobil için etiket font boyutu */
+                width: 100%; /* Etiket tam genişlik kaplasın */
+                text-align: left; /* Metni sola hizala */
             }
 
             .score-input {
-                width: 100%;
-                text-align: left;
+                width: 100%; /* Input tam genişlik kaplasın */
+                box-sizing: border-box; /* Padding ve border genişliğe dahil */
+                text-align: left; /* Metni sola hizala */
                 font-size: 1.1em; /* Mobil için input font boyutu */
+                padding: 10px 12px; /* Input'un iç boşluğunu ayarla */
             }
 
             .quick-score-buttons {
@@ -692,6 +742,14 @@
                 padding: 18px 15px; /* Mobil buton iç boşluğu daha fazla */
              }
 
+            .undo-redo-buttons {
+                flex-direction: column; /* Mobil'de alt alta */
+                gap: 8px;
+            }
+            .undo-redo-buttons button {
+                font-size: 1em;
+                padding: 12px 15px;
+            }
 
             .game-over-screen h2 {
                 font-size: 2.5em;
@@ -841,6 +899,10 @@
                                 </tbody>
                         </table>
                     </div>
+                    <div class="undo-redo-buttons">
+                        <button id="undoBtn" disabled>Geri Al</button>
+                        <button id="redoBtn" disabled>İleri Al</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -876,13 +938,19 @@
         const finalScoresDisplay = document.getElementById('finalScoresDisplay');
         const themeToggle = document.getElementById('themeToggle');
         const scoreDifferenceDisplay = document.getElementById('scoreDifferenceDisplay');
+        const undoBtn = document.getElementById('undoBtn'); // Yeni buton
+        const redoBtn = document.getElementById('redoBtn'); // Yeni buton
 
         let playerNames = ['', '', '', ''];
-        let teamRoundScores = [];
-        let teamScores = [0, 0];
+        let teamRoundScores = []; // Her elin skorunu tutar [[t1_skor, t2_skor], ...]
+        let teamScores = [0, 0]; // Mevcut toplam skorlar
         let currentRound = 1;
         let dealerIndex = 0;
         const maxRounds = 10;
+
+        // Geri alma/ileri alma geçmişi
+        let history = [];
+        let historyPointer = -1; // -1, henüz hiçbir elin kaydedilmediği anlamına gelir.
 
         const tasks = [
             "4’lü küt",
@@ -909,9 +977,6 @@
             gameScreen.style.display = 'flex';
 
             resetGame();
-            updateGameInfo();
-            updateTaskList();
-            updateScoreDifference();
         }
 
         function resetGame() {
@@ -919,6 +984,8 @@
             teamScores = [0, 0];
             currentRound = 1;
             dealerIndex = 0;
+            history = [];
+            historyPointer = -1; // Geçmişi sıfırla
             scoreTableBody.innerHTML = '';
             updateTotalScores();
             clearScoreInputs();
@@ -926,6 +993,7 @@
             updateTaskList();
             updateScoreDifference();
             gameOverScreen.style.display = 'none';
+            updateUndoRedoButtons(); // Buton durumlarını güncelle
         }
 
         function updateGameInfo() {
@@ -966,6 +1034,7 @@
         }
 
         function submitRoundScore() {
+            // Oyun bittiyse yeni skor eklenemez
             if (currentRound > maxRounds) {
                 showGameOverScreen();
                 return;
@@ -974,20 +1043,30 @@
             const team1RoundScore = parseInt(document.getElementById('team1RoundScoreInput').value);
             const team2RoundScore = parseInt(document.getElementById('team2RoundScoreInput').value);
 
-            teamRoundScores.push([team1RoundScore, team2RoundScore]);
+            // Yeni el eklendiğinde, historyPointer'dan sonraki tüm ileri alma geçmişini sil
+            history = history.slice(0, historyPointer + 1);
 
+            // Mevcut durumu geçmişe kaydet
+            history.push({
+                roundScores: [team1RoundScore, team2RoundScore], // Bu elin skorları
+                totalScores: [...teamScores], // Bu elden önceki toplam skorlar
+                round: currentRound,
+                dealer: dealerIndex
+            });
+            historyPointer++;
+
+            // Mevcut skorları ve turu güncelle
             teamScores[0] += team1RoundScore;
             teamScores[1] += team2RoundScore;
-
-            updateTotalScores();
-            addScoreRow(currentRound, team1RoundScore, team2RoundScore);
-            updateScoreDifference();
-
             currentRound++;
             dealerIndex = (dealerIndex + 1) % 4;
+
+            renderScoresFromHistory(); // Tüm skor tablosunu geçmişten yeniden çiz
             clearScoreInputs();
             updateGameInfo();
             updateTaskList();
+            updateScoreDifference();
+            updateUndoRedoButtons();
 
             if (currentRound > maxRounds) {
                 showGameOverScreen();
@@ -1000,6 +1079,62 @@
             row.insertCell().textContent = team1RScore;
             row.insertCell().textContent = team2RScore;
         }
+
+        function renderScoresFromHistory() {
+            scoreTableBody.innerHTML = ''; // Tabloyu temizle
+            let tempTeamScores = [0, 0];
+
+            for (let i = 0; i <= historyPointer; i++) {
+                const entry = history[i];
+                tempTeamScores[0] += entry.roundScores[0];
+                tempTeamScores[1] += entry.roundScores[1];
+                addScoreRow(i + 1, entry.roundScores[0], entry.roundScores[1]);
+            }
+            teamScores = [...tempTeamScores]; // Güncel toplam skorları ayarla
+            updateTotalScores();
+        }
+
+        function undoLastRound() {
+            if (historyPointer >= 0) {
+                historyPointer--;
+                // Eğer geri alınacak el kalmadıysa, oyunu sıfırla
+                if (historyPointer < 0) {
+                    resetGame(); // Tamamen sıfırla
+                } else {
+                    const previousState = history[historyPointer];
+                    teamScores = [...previousState.totalScores]; // Önceki toplam skorları yükle
+                    currentRound = previousState.round;
+                    dealerIndex = previousState.dealer;
+
+                    renderScoresFromHistory(); // Tabloyu ve toplam skorları yeniden çiz
+                    updateGameInfo();
+                    updateTaskList();
+                    updateScoreDifference();
+                    updateUndoRedoButtons();
+                    gameOverScreen.style.display = 'none'; // Oyun bitiş ekranını gizle
+                }
+            }
+        }
+
+        function redoLastRound() {
+            if (historyPointer < history.length - 1) {
+                historyPointer++;
+                const nextState = history[historyPointer];
+                renderScoresFromHistory(); // Tabloyu ve toplam skorları yeniden çiz
+                currentRound = nextState.round + 1; // currentRound'ı bir sonraki elin başlangıcı olarak ayarla
+                dealerIndex = (nextState.dealer + 1) % 4; // dealerIndex'i bir sonraki el için ayarla
+
+                updateGameInfo();
+                updateTaskList();
+                updateScoreDifference();
+                updateUndoRedoButtons();
+                // Redo yapıldıktan sonra eğer son ele geldiyse ve oyun bittiyse ekranı göster
+                if (currentRound > maxRounds) {
+                    showGameOverScreen();
+                }
+            }
+        }
+
 
         function updateScoreDifference() {
             const diff = Math.abs(teamScores[0] - teamScores[1]);
@@ -1067,6 +1202,11 @@
             }
         }
 
+        function updateUndoRedoButtons() {
+            undoBtn.disabled = historyPointer < 0;
+            redoBtn.disabled = historyPointer >= history.length - 1;
+        }
+
 
         // --- Event Listeners ---
 
@@ -1081,6 +1221,9 @@
             document.getElementById('player4Name').value = '';
         });
 
+        undoBtn.addEventListener('click', undoLastRound);
+        redoBtn.addEventListener('click', redoLastRound);
+
         // Tema değiştirme fonksiyonu
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('green-theme');
@@ -1092,6 +1235,7 @@
             updateGameInfo();
             updateTaskList();
             updateScoreDifference();
+            updateUndoRedoButtons(); // Sayfa yüklendiğinde butonları devre dışı bırak
         });
     </script>
 </body>
